@@ -1,10 +1,9 @@
 # Lyra OS
 
-> [!WARNING]
-> Este repositório inicia o flavor XFCE experimental do Lyra OS. Sua árvore
-> ainda preserva o histórico da edição GNOME usada como base e não representa
-> uma imagem XFCE funcional. A primeira Alpha será reduzida à pilha XFCE da base,
-> sem pacotes próprios do Lyra.
+> [!IMPORTANT]
+> O XFCE é um flavor oficial do Lyra OS. Este repositório preserva parte do
+> histórico das edições usadas como base, mas mantém imagem, integração e gates
+> de qualidade próprios para o XFCE.
 
 Lyra OS é uma distribuição Linux desktop baseada no openSUSE Leap 16,
 voltada a uma experiência GNOME simples, estável e integrada ao ecossistema

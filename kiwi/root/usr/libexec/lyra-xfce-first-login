@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/lyra-os"
+marker="$state_dir/xfce-defaults-applied"
+wallpaper="/usr/share/backgrounds/lyra/2702-dawn.png"
+menu_icon="/usr/share/icons/hicolor/scalable/apps/lyra-launcher.svg"
+
+if [ -e "$marker" ]; then
+  exit 0
+fi
+
+# Fixe o arquivo exato do Lyra no botão do Whisker. Usar apenas o nome do
+# ícone deixa a escolha sujeita ao tema/cache da sessão.
+for menu_config in "${XDG_CONFIG_HOME:-$HOME/.config}"/xfce4/panel/whiskermenu-*.rc; do
+  [ -f "$menu_config" ] || continue
+  if grep -q '^button-icon=' "$menu_config"; then
+    sed -i "s|^button-icon=.*|button-icon=$menu_icon|" "$menu_config"
+  else
+    printf 'button-icon=%s\n' "$menu_icon" >> "$menu_config"
+  fi
+done
+
+for _ in {1..20}; do
+  mapfile -t wallpaper_properties < <(
+    xfconf-query -c xfce4-desktop -l 2>/dev/null |
+      grep -E '/(last-image|image-path)$' || true
+  )
+  if [ "${#wallpaper_properties[@]}" -gt 0 ]; then
+    for property in "${wallpaper_properties[@]}"; do
+      xfconf-query -c xfce4-desktop -p "$property" -s "$wallpaper"
+    done
+    mkdir -p "$state_dir"
+    : > "$marker"
+    exit 0
+  fi
+  sleep 0.5
+done
+
+exit 1

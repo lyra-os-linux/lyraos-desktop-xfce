@@ -47,7 +47,7 @@ REPO_ROOT="$(dirname "$KIWI_DESC")"
 INSTALLER_DIR="$REPO_ROOT/installer"
 PACKAGE_SIGNING_KEYRING="$KIWI_DESC/keys/obs-package-signing-keyring.asc"
 CURRENT_UID="$(id -u)"
-# Keep enough memory for the live GNOME session and the Rust installer while
+# Keep enough memory for the live XFCE session and the Rust installer while
 # installer regressions are being isolated.
 RAM_MB="${LYRA_VM_RAM_MB:-8192}"
 SMP="${LYRA_VM_CPUS:-4}"
@@ -59,6 +59,15 @@ BUILD_ONLY=0
 BOOT_INSTALLED=0
 SECURE_BOOT=0
 USE_LOCAL_INSTALLER=1
+PRIVILEGE_TOOL="${LYRA_PRIVILEGE_TOOL:-sudo}"
+
+run_privileged() {
+  case "$PRIVILEGE_TOOL" in
+    sudo) sudo "$@" ;;
+    pkexec) pkexec "$@" ;;
+    *) echo "LYRA_PRIVILEGE_TOOL must be sudo or pkexec" >&2; return 2 ;;
+  esac
+}
 
 usage() {
   cat <<'EOF'
@@ -90,8 +99,8 @@ reinicie dentro da mesma janela do QEMU para testar o primeiro boot pelo disco
 instalado. --build-only não requer QEMU, KVM, OVMF nem sessão gráfica.
 
 Por padrão, um novo build compila e injeta o binário do instalador deste
-workspace; o Lyra Welcome sempre usa o RPM publicado no OBS, já que vive em
-repositório próprio. --skip-build apenas reinicia a ISO já existente e não
+workspace; a edição XFCE omite temporariamente o Lyra Welcome porque seu RPM
+depende do frontend vega-gtk. --skip-build apenas reinicia a ISO já existente e não
 recompila.
 EOF
 }
@@ -112,7 +121,7 @@ done
 # Keep the large KIWI tree, ISO and VM disk on the persistent filesystem.
 # On many systems /tmp is a small RAM-backed tmpfs and cannot hold a full
 # image build plus an expanding qcow2 installation disk.
-WORK_DIR="${LYRA_TEST_WORK_DIR:-/var/tmp/lyraos-desktop-test-$CURRENT_UID}"
+WORK_DIR="${LYRA_TEST_WORK_DIR:-/tmp/lyraos-desktop-xfce-test-$CURRENT_UID}"
 BUILD_DIR="$WORK_DIR/build"
 BUILD_DESCRIPTION_DIR="$WORK_DIR/description"
 ISO_DIR="$WORK_DIR/iso"
@@ -336,12 +345,16 @@ if [ "$BOOT_INSTALLED" -eq 1 ]; then
 fi
 
 if [ "$SKIP_BUILD" -eq 0 ]; then
-  for command in kiwi-ng ldconfig ldd lsinitrd strings sudo xorriso unsquashfs; do
+  for command in kiwi-ng ldd lsinitrd strings "$PRIVILEGE_TOOL" xorriso unsquashfs; do
     if ! command -v "$command" >/dev/null 2>&1; then
       echo "required build command not found: $command" >&2
       exit 1
     fi
   done
+  if [ ! -x /usr/sbin/ldconfig ]; then
+    echo "required build command not found: /usr/sbin/ldconfig" >&2
+    exit 1
+  fi
   if [ "$USE_LOCAL_INSTALLER" -eq 1 ]; then
     for command in cargo install sha256sum; do
       if ! command -v "$command" >/dev/null 2>&1; then
@@ -376,7 +389,11 @@ repair_host_loader_cache() {
     return 0
   fi
   echo "!!! host loader cache became inconsistent; regenerating it with ldconfig"
-  sudo -n ldconfig
+  if [ "$PRIVILEGE_TOOL" = sudo ]; then
+    sudo -n ldconfig
+  else
+    pkexec /usr/sbin/ldconfig
+  fi
   if ! host_loader_is_healthy; then
     echo "!!! host loader cache is still inconsistent after ldconfig" >&2
     return 1
@@ -396,14 +413,18 @@ stop_loader_guard() {
 start_loader_guard() {
   # Acquire credentials in the foreground so recovery never blocks on an
   # invisible password prompt in the background watcher.
-  sudo -v
+  if [ "$PRIVILEGE_TOOL" = sudo ]; then
+    sudo -v
+  else
+    pkexec /usr/bin/true
+  fi
   repair_host_loader_cache
   LOADER_GUARD_PARENT_PID="$BASHPID"
   (
     refresh_count=0
     while sleep 2; do
       refresh_count=$((refresh_count + 1))
-      if [ "$refresh_count" -ge 30 ]; then
+      if [ "$PRIVILEGE_TOOL" = sudo ] && [ "$refresh_count" -ge 30 ]; then
         if ! sudo -n -v; then
           echo "!!! loader guard could not renew its sudo credential; aborting build" >&2
           kill -TERM "$LOADER_GUARD_PARENT_PID"
@@ -445,7 +466,7 @@ fi
 
 if [ "$SKIP_BUILD" -eq 0 ]; then
   echo "--- wiping the previous build dir; preserving the current ISO ---"
-  sudo rm -rf "$BUILD_DIR"
+  run_privileged rm -rf "$BUILD_DIR"
   ISO_PATH=""
 
   echo "--- staging clean KIWI description ---"
@@ -505,13 +526,13 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
     echo "--- using published Lyra Installer RPM from OBS ---"
   fi
 
-  echo "--- using published Lyra Welcome RPM from OBS ---"
+  echo "--- XFCE image omits Lyra Welcome to avoid pulling vega-gtk ---"
 
-  echo "--- building ISO with kiwi-ng (will prompt for sudo password) ---"
+  echo "--- building ISO with kiwi-ng via $PRIVILEGE_TOOL ---"
   start_loader_guard
   trap 'stop_loader_guard' EXIT
   trap 'stop_loader_guard; exit 130' INT TERM
-  if sudo kiwi-ng \
+  if run_privileged kiwi-ng \
       --setenv="LYRA_BUILD_SOURCE_COMMIT=$BUILD_SOURCE_COMMIT" \
       --setenv="LYRA_BUILD_SOURCE_DIRTY=$BUILD_SOURCE_DIRTY" \
       --setenv="LYRA_BUILD_SOURCE_EPOCH=$BUILD_SOURCE_EPOCH" \
@@ -549,6 +570,12 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
     echo "!!! built image does not identify source commit $BUILD_SOURCE_COMMIT" >&2
     exit 1
   fi
+  if ! rpm --root "$BUILD_DIR/build/image-root" -q vega-xfce >/dev/null ||
+     rpm --root "$BUILD_DIR/build/image-root" -q vega-gtk >/dev/null 2>&1 ||
+     rpm --root "$BUILD_DIR/build/image-root" -q lyra-welcome >/dev/null 2>&1; then
+    echo "!!! XFCE image must contain vega-xfce without vega-gtk or lyra-welcome" >&2
+    exit 1
+  fi
 
   IMAGE_INSTALLED_GRUB_DEFAULT="$BUILD_DIR/build/image-root/etc/default/grub"
   IMAGE_INSTALLED_GRUB_THEME="$BUILD_DIR/build/image-root/usr/share/grub/themes/Lyra-OS/theme.txt"
@@ -561,31 +588,47 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   fi
 
   IMAGE_WALLPAPER_DIR="$BUILD_DIR/build/image-root/usr/share/backgrounds/lyra"
-  IMAGE_GNOME_DEFAULTS="$BUILD_DIR/build/image-root/usr/share/glib-2.0/schemas/zz-lyra-desktop-wallpaper.gschema.override"
+  IMAGE_XFCE_DESKTOP="$BUILD_DIR/build/image-root/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+  IMAGE_XFCE_SETTINGS="$BUILD_DIR/build/image-root/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+  IMAGE_XFCE_PANEL="$BUILD_DIR/build/image-root/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+  IMAGE_XFCE_MENU="$BUILD_DIR/build/image-root/etc/xdg/xfce4/whiskermenu/defaults.rc"
+  IMAGE_LIVE_XFCE="$BUILD_DIR/build/image-root/home/liveuser/.config/xfce4"
   IMAGE_GTK4_DEFAULT="$BUILD_DIR/build/image-root/etc/skel/.config/gtk-4.0/gtk.css"
   if [ ! -s "$IMAGE_WALLPAPER_DIR/2702-dawn.png" ]; then
     echo "!!! built image is missing the default Lyra OS - Dawn wallpaper asset:" >&2
     echo "  $IMAGE_WALLPAPER_DIR/2702-dawn.png" >&2
     exit 1
   fi
-  if ! grep -Fx \
-      "picture-uri='file:///usr/share/backgrounds/lyra/2702-dawn.png'" \
-      "$IMAGE_GNOME_DEFAULTS" >/dev/null ||
-     ! grep -Fx \
-      "picture-uri-dark='file:///usr/share/backgrounds/lyra/2702-dawn.png'" \
-      "$IMAGE_GNOME_DEFAULTS" >/dev/null; then
-    echo "!!! built image does not use Lyra OS - Dawn as the default GNOME wallpaper" >&2
+  if ! grep -F 'value="/usr/share/backgrounds/lyra/2702-dawn.png"' \
+      "$IMAGE_XFCE_DESKTOP" >/dev/null; then
+    echo "!!! built image does not use Lyra OS - Dawn as the default XFCE wallpaper" >&2
     exit 1
   fi
-  if ! grep -Fx "gtk-theme='Lyra-OS'" "$IMAGE_GNOME_DEFAULTS" >/dev/null ||
-     ! grep -Fx "color-scheme='prefer-dark'" "$IMAGE_GNOME_DEFAULTS" >/dev/null ||
+  if ! grep -F 'name="ThemeName" type="string" value="Lyra-OS"' "$IMAGE_XFCE_SETTINGS" >/dev/null ||
+     ! grep -F 'name="IconThemeName" type="string" value="Lyra-OS-Icons"' "$IMAGE_XFCE_SETTINGS" >/dev/null ||
      ! grep -Fx \
        '@import url("file:///usr/share/themes/Lyra-OS/gtk-4.0/gtk.css");' \
        "$IMAGE_GTK4_DEFAULT" >/dev/null; then
-    echo "!!! built image does not activate the complete Lyra OS GTK theme" >&2
+    echo "!!! built image does not activate the Lyra OS XFCE/GTK theme" >&2
     exit 1
   fi
-  echo "--- validated Lyra OS - Dawn wallpaper and complete GTK defaults ---"
+  if ! grep -Fx 'button-icon=/usr/share/icons/hicolor/scalable/apps/lyra-launcher.svg' "$IMAGE_XFCE_MENU" >/dev/null; then
+    echo "!!! built image does not use the Lyra logo in the XFCE menu" >&2
+    exit 1
+  fi
+  if ! run_privileged grep -Fx 'button-icon=/usr/share/icons/hicolor/scalable/apps/lyra-launcher.svg' \
+      "$IMAGE_LIVE_XFCE/panel/whiskermenu-1.rc" >/dev/null ||
+     ! run_privileged grep -F '2702-dawn.png' \
+      "$IMAGE_LIVE_XFCE/xfconf/xfce-perchannel-xml/xfce4-desktop.xml" >/dev/null; then
+    echo "!!! liveuser profile did not receive Lyra XFCE wallpaper/menu defaults" >&2
+    exit 1
+  fi
+  if [ ! -s "$BUILD_DIR/build/image-root/usr/lib64/xfce4/panel/plugins/libxfce4powermanager.so" ] ||
+     ! grep -F 'value="power-manager-plugin"' "$IMAGE_XFCE_PANEL" >/dev/null; then
+    echo "!!! built image is missing the XFCE power manager panel plugin" >&2
+    exit 1
+  fi
+  echo "--- validated Dawn wallpaper, Lyra menu logo and XFCE defaults ---"
 
   IMAGE_INSTALLER_GUI="$BUILD_DIR/build/image-root/usr/bin/lyra-installer"
   IMAGE_INSTALLER_LOCK="$BUILD_DIR/build/image-root/usr/bin/lyra-install-lock"
@@ -649,7 +692,7 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
         "$IMAGE_INSTALLER_AUTOSTART" >/dev/null ||
      ! grep -Fx 'StartupWMClass=lyra-installer' \
         "$IMAGE_INSTALLER_AUTOSTART" >/dev/null; then
-    echo "!!! built image has no valid GNOME autostart for Lyra Installer" >&2
+    echo "!!! built image has no valid XFCE autostart for Lyra Installer" >&2
     exit 1
   fi
   if [ ! -f "$IMAGE_INSTALLER_LAUNCHER" ] || [ ! -s "$IMAGE_INSTALLER_ICON" ]; then
@@ -668,9 +711,9 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   if command -v desktop-file-validate >/dev/null 2>&1; then
     desktop-file-validate "$IMAGE_INSTALLER_AUTOSTART" "$IMAGE_INSTALLER_LAUNCHER"
   fi
-  echo "--- validated Lyra Installer executable and GNOME autostart chain ---"
+  echo "--- validated Lyra Installer executable and XFCE autostart chain ---"
 
-  BUILT_ISO="$(sudo find "$BUILD_DIR" -maxdepth 1 -type f -name '*.iso' -print -quit)"
+  BUILT_ISO="$(find "$BUILD_DIR" -maxdepth 1 -type f -name '*.iso' -print -quit)"
   if [ -z "$BUILT_ISO" ]; then
     echo "!!! kiwi-ng reported success but no .iso found under $BUILD_DIR"
     exit 1
@@ -756,8 +799,7 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   ISO_STAGED="$ISO_DIR/.$ISO_NAME.new"
   rm -f "$ISO_STAGED"
   echo "--- staging $BUILT_ISO -> $ISO_STAGED ---"
-  sudo cp "$BUILT_ISO" "$ISO_STAGED"
-  sudo chown "$(id -u):$(id -g)" "$ISO_STAGED"
+  cp "$BUILT_ISO" "$ISO_STAGED"
 
   EXISTING_ISOS=()
   mapfile -d '' -t EXISTING_ISOS < <(

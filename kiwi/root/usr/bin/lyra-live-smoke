@@ -116,13 +116,13 @@ def validate_live_session(
         )
         expected_units = ("getty@tty1.service", "NetworkManager.service")
     else:
-        gdm_path = rooted(root, "/etc/gdm/custom.conf")
-        gdm = gdm_path.read_text(encoding="utf-8") if gdm_path.is_file() else ""
+        lightdm_path = rooted(root, "/etc/lightdm/lightdm.conf.d/50-lyra-live.conf")
+        lightdm = lightdm_path.read_text(encoding="utf-8") if lightdm_path.is_file() else ""
         check(
-            "gdm-autologin",
-            "AutomaticLoginEnable=true" in gdm
-            and "AutomaticLogin=liveuser" in gdm,
-            "GDM autologin targets liveuser",
+            "lightdm-autologin",
+            "autologin-user=liveuser" in lightdm
+            and "user-session=xfce" in lightdm,
+            "LightDM autologin targets the live XFCE session",
         )
 
         desktop_path = rooted(
@@ -153,7 +153,7 @@ def validate_live_session(
             )
         expected_units = (
             "graphical.target",
-            "gdm.service",
+            "lightdm.service",
             "NetworkManager.service",
         )
 
@@ -166,11 +166,11 @@ def validate_live_session(
         )
 
     if profile == "desktop":
-        code, output = runner(["pgrep", "-x", "gnome-shell"])
+        code, output = runner(["pgrep", "-x", "xfce4-session"])
         check(
-            "gnome-shell",
+            "xfce4-session",
             code == 0 and bool(output),
-            "GNOME Shell process is running",
+            "XFCE session process is running",
         )
 
     code, failed_units = runner(

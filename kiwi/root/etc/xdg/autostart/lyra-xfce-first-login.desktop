@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Lyra OS XFCE defaults
+Exec=/usr/libexec/lyra-xfce-first-login
+OnlyShowIn=XFCE;
+NoDisplay=true
+X-GNOME-Autostart-Delay=2
+

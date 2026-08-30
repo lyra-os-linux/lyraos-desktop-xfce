@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Vega
+Comment=Lyra OS Control Center
+Comment[pt_BR]=Central de controle do Lyra OS
+Exec=/usr/bin/vega-xfce
+Icon=vega
+Terminal=false
+Categories=Settings;System;

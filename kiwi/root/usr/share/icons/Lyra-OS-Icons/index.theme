@@ -1,0 +1,33 @@
+[Icon Theme]
+Name=Lyra OS Icons
+Comment=Flat sapphire icon theme for Lyra OS
+Inherits=adwaita-xfce,Adwaita,hicolor
+Directories=scalable/places,scalable/devices,scalable/apps,scalable/status
+
+[scalable/places]
+Size=64
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Places
+
+[scalable/devices]
+Size=64
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Devices
+
+[scalable/apps]
+Size=64
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Applications
+
+[scalable/status]
+Size=64
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Status

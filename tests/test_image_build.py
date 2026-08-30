@@ -76,18 +76,57 @@ class ImagePolicyTests(unittest.TestCase):
             self.assertIn(policy, drop_in)
 
     def test_vega_update_indicator_is_enabled_by_default(self) -> None:
-        override = (
-            ROOT
-            / "kiwi/root/usr/share/glib-2.0/schemas/99-lyra-sheliak.gschema.override"
-        ).read_text(encoding="utf-8")
-        self.assertIn("sheliak@lyraos.com.br", override)
-        self.assertIn("updates-indicator@lyraos.com.br", override)
-
         root = ET.parse(ROOT / "kiwi/config.xml").getroot()
         desktop_packages = {
             node.attrib["name"] for node in root.findall("packages/package")
         }
-        self.assertIn("vega-gtk", desktop_packages)
+        self.assertIn("vega-xfce", desktop_packages)
+        self.assertNotIn("vega-gtk", desktop_packages)
+
+    def test_xfce_defaults_use_lyra_wallpaper_menu_and_vega(self) -> None:
+        root = ROOT / "kiwi/root"
+        config = ET.parse(ROOT / "kiwi/config.xml").getroot()
+        desktop_packages = {
+            node.attrib["name"] for node in config.findall("packages/package")
+        }
+        lightdm = (root / "etc/lightdm/lightdm-gtk-greeter.conf.d/50-lyra.conf").read_text(
+            encoding="utf-8"
+        )
+        desktop = (root / "etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml").read_text(
+            encoding="utf-8"
+        )
+        panel = (root / "etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml").read_text(
+            encoding="utf-8"
+        )
+        whisker = (root / "etc/xdg/xfce4/whiskermenu/defaults.rc").read_text(
+            encoding="utf-8"
+        )
+        launcher = (root / "etc/xdg/xfce4/panel/launcher-2/vega.desktop").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("2702-dawn.png", lightdm)
+        self.assertIn("lyra-launcher.svg", lightdm)
+        self.assertIn("2702-dawn.png", desktop)
+        self.assertIn('value="whiskermenu"', panel)
+        menu_icon = "/usr/share/icons/hicolor/scalable/apps/lyra-launcher.svg"
+        self.assertIn(f"button-icon={menu_icon}", whisker)
+        icon_theme = (root / "usr/share/icons/Lyra-OS-Icons/index.theme").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Inherits=adwaita-xfce,Adwaita,hicolor", icon_theme)
+        self.assertIn('value="power-manager-plugin"', panel)
+        self.assertIn("xfce4-power-manager-plugin", desktop_packages)
+        self.assertIn("/usr/bin/vega-xfce", launcher)
+        first_login = root / "usr/libexec/lyra-xfce-first-login"
+        self.assertTrue(first_login.is_file())
+        self.assertNotEqual(first_login.stat().st_mode & 0o111, 0)
+        first_login_text = first_login.read_text(encoding="utf-8")
+        self.assertIn("2702-dawn.png", first_login_text)
+        self.assertIn(menu_icon, first_login_text)
+        config_sh = (ROOT / "kiwi/config.sh").read_text(encoding="utf-8")
+        self.assertIn("/etc/skel/.config/xfce4", config_sh)
+        self.assertIn("/home/liveuser/.config/xfce4", config_sh)
+        self.assertIn("whiskermenu-1.rc", config_sh)
 
     def test_canonical_sources_pass_repository_and_signature_policy(self) -> None:
         image_build.validate_sources(self.manifest)
@@ -175,8 +214,10 @@ class ImagePolicyTests(unittest.TestCase):
         root = ET.parse(ROOT / "kiwi/config.xml").getroot()
         packages = {node.attrib["name"] for node in root.findall("packages/package")}
 
-        for package in ("fish", "nvm-fish", "git", "linuxtoys", "lyra-welcome"):
+        for package in ("fish", "nvm-fish", "git", "linuxtoys"):
             self.assertIn(package, packages)
+        self.assertNotIn("lyra-welcome", packages)
+        self.assertNotIn("vega-gtk", packages)
 
         live_user = root.find("users/user[@name='liveuser']")
         assert live_user is not None
@@ -281,23 +322,19 @@ class ImagePolicyTests(unittest.TestCase):
         }
         self.assertNotIn("chord", desktop_packages)
 
-        defaults = (
-            ROOT
-            / "kiwi/root/usr/share/glib-2.0/schemas/99-lyra-desktop-defaults.gschema.override"
+        panel = (
+            ROOT / "kiwi/root/etc/xdg/xfce4/panel/default.xml"
         ).read_text(encoding="utf-8")
-        self.assertNotIn("'org.lyraos.Chord.desktop'", defaults)
+        self.assertNotIn("chord", panel.lower())
 
     def test_bluetooth_and_screen_recording_are_installed_and_enabled(self) -> None:
-        # Real gap found on an installed image: onlyRequired dropped both
-        # (neither is a hard Requires of gnome_basic/gnome), so Bluetooth
-        # never turned on and GNOME Shell's Ctrl+Shift+Alt+R screen
-        # recorder silently failed while plain screenshots (a different,
-        # non-GStreamer code path) kept working.
+        # onlyRequired can drop desktop integrations that are not hard
+        # requirements of the XFCE pattern, so keep them explicit.
         root = ET.parse(ROOT / "kiwi/config.xml").getroot()
         desktop_packages = {
             node.attrib["name"] for node in root.findall("packages/package")
         }
-        for name in ("bluez", "bluez-firmware", "gnome-bluetooth", "gstreamer-plugins-good"):
+        for name in ("bluez", "bluez-firmware", "blueman", "gstreamer-plugins-good"):
             self.assertIn(name, desktop_packages, name)
 
         config_sh = (ROOT / "kiwi/config.sh").read_text(encoding="utf-8")
@@ -388,19 +425,12 @@ class ImagePolicyTests(unittest.TestCase):
             "libreoffice-impress",
             "libreoffice-math",
             "libreoffice-writer",
-            "libreoffice-gnome",
             "libreoffice-gtk3",
             "libreoffice-l10n-en",
             "libreoffice-l10n-pt_BR",
             "libreoffice-l10n-es",
         }
         self.assertTrue(libreoffice.issubset(packages))
-
-        defaults = (
-            ROOT
-            / "kiwi/root/usr/share/glib-2.0/schemas/99-lyra-desktop-defaults.gschema.override"
-        ).read_text(encoding="utf-8")
-        self.assertIn("libreoffice-writer.desktop", defaults)
 
     def test_desktop_app_curation_uses_vlc_without_gnome_software_or_monitor(self) -> None:
         root = ET.parse(ROOT / "kiwi/config.xml").getroot()
@@ -485,8 +515,8 @@ class ImagePolicyTests(unittest.TestCase):
         self.assertIn("start_loader_guard", helper)
         self.assertIn("stop_loader_guard", helper)
         self.assertIn("sudo -n ldconfig", helper)
-        self.assertLess(helper.index("start_loader_guard"), helper.index("sudo kiwi-ng"))
-        self.assertGreater(helper.rindex("stop_loader_guard"), helper.index("sudo kiwi-ng"))
+        self.assertLess(helper.index("start_loader_guard"), helper.index("run_privileged kiwi-ng"))
+        self.assertGreater(helper.rindex("stop_loader_guard"), helper.index("run_privileged kiwi-ng"))
 
     def test_vm_helper_can_boot_installed_disk_without_iso_or_reset(self) -> None:
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")
@@ -564,7 +594,7 @@ class ImagePolicyTests(unittest.TestCase):
         )
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")
         self.assertIn("IMAGE_GTK4_DEFAULT", helper)
-        self.assertIn("does not activate the complete Lyra OS GTK theme", helper)
+        self.assertIn("does not activate the Lyra OS XFCE/GTK theme", helper)
 
     def test_vm_helper_keeps_build_output_outside_the_source_checkout(self) -> None:
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")

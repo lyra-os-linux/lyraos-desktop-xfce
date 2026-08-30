@@ -32,10 +32,10 @@ class LiveSmokeTests(unittest.TestCase):
             target.write_text("fixture\n", encoding="utf-8")
         for path in ("usr/bin/lyra-installer", "usr/bin/lyra-install-lock"):
             os.chmod(root / path, 0o755)
-        gdm = root / "etc/gdm/custom.conf"
-        gdm.parent.mkdir(parents=True)
-        gdm.write_text(
-            "[daemon]\nAutomaticLoginEnable=true\nAutomaticLogin=liveuser\n",
+        lightdm = root / "etc/lightdm/lightdm.conf.d/50-lyra-live.conf"
+        lightdm.parent.mkdir(parents=True)
+        lightdm.write_text(
+            "[Seat:*]\nautologin-user=liveuser\nuser-session=xfce\n",
             encoding="utf-8",
         )
         desktop = root / "usr/share/applications/org.lyraos.LyraInstaller.desktop"
@@ -71,8 +71,8 @@ class LiveSmokeTests(unittest.TestCase):
                 root=root,
                 username="liveuser",
                 environment={
-                    "XDG_CURRENT_DESKTOP": "GNOME",
-                    "XDG_SESSION_TYPE": "wayland",
+                    "XDG_CURRENT_DESKTOP": "XFCE",
+                    "XDG_SESSION_TYPE": "x11",
                 },
                 runner=self.runner,
                 expect_offline=True,

@@ -75,8 +75,8 @@ class SystemSmokeTests(unittest.TestCase):
                 root=root,
                 username="alice",
                 environment={
-                    "XDG_CURRENT_DESKTOP": "GNOME",
-                    "XDG_SESSION_TYPE": "wayland",
+                    "XDG_CURRENT_DESKTOP": "XFCE",
+                    "XDG_SESSION_TYPE": "x11",
                 },
                 runner=self.runner,
             )

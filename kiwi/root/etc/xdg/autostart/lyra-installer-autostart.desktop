@@ -13,4 +13,4 @@ Terminal=false
 StartupNotify=true
 Categories=System;
 X-AppStream-Ignore=true
-X-GNOME-Autostart-enabled=true
+OnlyShowIn=XFCE;

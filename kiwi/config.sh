@@ -63,9 +63,12 @@ ln -sfn ../proc/self/mounts /etc/mtab
 suseInsertService NetworkManager
 suseInsertService firewalld
 
-# Display manager
-baseUpdateSysConfig /etc/sysconfig/displaymanager DISPLAYMANAGER gdm
-suseInsertService gdm
+# Display manager and live XFCE session. Keep autologin in a dedicated file:
+# the installer removes that live-only artifact while retaining LightDM for
+# the installed system.
+baseUpdateSysConfig /etc/sysconfig/displaymanager DISPLAYMANAGER lightdm
+# Leap starts the selected manager through display-manager-legacy.service.
+# Enabling lightdm.service directly conflicts with that distribution alias.
 
 # bluez is present but its service isn't enabled by default - without
 # this, Bluetooth stays off even with the adapter and driver both
@@ -76,12 +79,38 @@ suseInsertService bluetooth
 # Live-session autologin as liveuser. This is a live-boot convenience
 # only; the installed system's login/account model is set up by the
 # Lyra Installer (root disabled, sudo user), not here.
-mkdir -p /etc/gdm
-cat > /etc/gdm/custom.conf <<EOF
-[daemon]
-AutomaticLoginEnable=true
-AutomaticLogin=liveuser
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/50-lyra-live.conf <<EOF
+[Seat:*]
+autologin-user=liveuser
+autologin-user-timeout=0
+user-session=xfce
+greeter-session=lightdm-gtk-greeter
 EOF
+
+# Seed the actual per-user XFCE configuration. The openSUSE branding package
+# creates its own panel and Whisker files on first login, so /etc/xdg alone is
+# not sufficient to win that race. /etc/skel covers installed users; the live
+# account already exists when config.sh runs and therefore receives the same
+# seed explicitly.
+XFCE_SKEL=/etc/skel/.config/xfce4
+install -d -m 0755 \
+  "$XFCE_SKEL/xfconf/xfce-perchannel-xml" \
+  "$XFCE_SKEL/panel/launcher-2"
+install -m 0644 \
+  /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml \
+  "$XFCE_SKEL/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+install -m 0644 \
+  /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml \
+  "$XFCE_SKEL/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+install -m 0644 /etc/xdg/xfce4/whiskermenu/defaults.rc \
+  "$XFCE_SKEL/panel/whiskermenu-1.rc"
+install -m 0644 /etc/xdg/xfce4/panel/launcher-2/vega.desktop \
+  "$XFCE_SKEL/panel/launcher-2/vega.desktop"
+
+install -d -o liveuser -g wheel -m 0755 /home/liveuser/.config
+cp -a /etc/skel/.config/xfce4 /home/liveuser/.config/xfce4
+chown -R liveuser:wheel /home/liveuser/.config/xfce4
 
 # Passwordless sudo for the live session only. liveuser's password is
 # locked ("!" in config.xml), so without this it cannot authenticate to
@@ -107,10 +136,8 @@ if [ ! -r /etc/flatpak/remotes.d/flathub.flatpakrepo ]; then
     exit 1
 fi
 
-# Compile the image-owned GNOME defaults after KIWI has overlaid root/.
-# This activates the system-installed Sheliak extension for the live
-# account and for users subsequently created by the installer, while
-# allowing each user to disable it normally.
+# Compile image-owned GSettings defaults used by GTK applications after KIWI
+# has overlaid root/. XFCE itself is configured through xfconf XML defaults.
 glib-compile-schemas /usr/share/glib-2.0/schemas
 
 # Fish plugin set, resolved once here instead of on every machine's first

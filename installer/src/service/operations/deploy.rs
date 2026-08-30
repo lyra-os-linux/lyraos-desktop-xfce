@@ -31,7 +31,7 @@ const INSTALLED_THIRD_PARTY_PRIORITY: u8 = 90;
 
 /// Files that only make sense in the autologin live session.
 const LIVE_ONLY_ARTIFACTS: &[&str] = &[
-    "etc/gdm/custom.conf",
+    "etc/lightdm/lightdm.conf.d/50-lyra-live.conf",
     "etc/xdg/autostart/lyra-installer-autostart.desktop",
     "usr/bin/lyra-live-smoke",
     // liveuser's passwordless sudo (kiwi/config.sh) - must never survive
@@ -44,7 +44,6 @@ const LIVE_ONLY_ARTIFACTS: &[&str] = &[
 const ENABLED_SERVICES: &[&str] = &[
     "NetworkManager.service",
     "firewalld.service",
-    "gdm.service",
     "cups.service",
 ];
 
@@ -2229,7 +2228,7 @@ mod tests {
         assert_eq!(
             executor.calls(),
             vec![
-                "systemctl --root=/run/lyra-installer/target enable NetworkManager.service firewalld.service gdm.service cups.service"
+                "systemctl --root=/run/lyra-installer/target enable NetworkManager.service firewalld.service cups.service"
             ]
         );
     }

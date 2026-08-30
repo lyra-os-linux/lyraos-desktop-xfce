@@ -1,0 +1,6 @@
+favorites=thunar.desktop,firefox.desktop,org.lyraos.Vega.desktop,xfce4-terminal-emulator.desktop
+button-icon=/usr/share/icons/hicolor/scalable/apps/lyra-launcher.svg
+button-title=Lyra OS
+show-button-title=false
+show-button-icon=true
+show-menu-icons=true

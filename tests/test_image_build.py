@@ -554,6 +554,9 @@ class ImagePolicyTests(unittest.TestCase):
         self.assertEqual(helper.count('-uuid "$VM_UUID"'), 4)
         self.assertIn("load_vm_uuid", branch)
         self.assertNotIn('rm -f "$VM_ID_FILE"', branch)
+        self.assertIn('VM_GUEST_EVIDENCE_FILE="$VM_DIR/upgrade-guest-evidence.jsonl"', helper)
+        self.assertEqual(helper.count("name=org.lyraos.UpgradeEvidence"), 2)
+        self.assertNotIn('rm -f "$VM_GUEST_EVIDENCE_FILE"', branch)
 
     def test_upgrade_rehearsal_trace_is_atomic_and_bound_to_vm_artifacts(self) -> None:
         tool = ROOT / "kiwi/test/rehearsal-trace.py"

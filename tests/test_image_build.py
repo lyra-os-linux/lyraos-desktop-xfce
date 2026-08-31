@@ -89,9 +89,13 @@ class ImagePolicyTests(unittest.TestCase):
         desktop_packages = {
             node.attrib["name"] for node in config.findall("packages/package")
         }
-        lightdm = (root / "etc/lightdm/lightdm-gtk-greeter.conf.d/50-lyra.conf").read_text(
+        lightdm = (root / "etc/lightdm/lightdm-gtk-greeter.conf").read_text(
             encoding="utf-8"
         )
+        lightdm_fragment = (
+            root / "etc/lightdm/lightdm-gtk-greeter.conf.d/50-lyra.conf"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(lightdm, lightdm_fragment)
         desktop = (root / "etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml").read_text(
             encoding="utf-8"
         )
@@ -104,12 +108,20 @@ class ImagePolicyTests(unittest.TestCase):
         launcher = (root / "etc/xdg/xfce4/panel/launcher-2/vega.desktop").read_text(
             encoding="utf-8"
         )
-        self.assertIn("2702-dawn.png", lightdm)
+        self.assertIn("lyra-dawn.png", lightdm)
         self.assertIn("lyra-launcher.svg", lightdm)
+        self.assertIn("hide-user-image=false", lightdm)
+        self.assertIn("round-user-image=true", lightdm)
+        self.assertIn("position=50%,center 50%,center", lightdm)
         self.assertIn("2702-dawn.png", desktop)
         self.assertIn('value="whiskermenu"', panel)
+        self.assertIn('<property name="size" type="uint" value="52"/>', panel)
+        self.assertIn('<property name="icon-size" type="uint" value="28"/>', panel)
         menu_icon = "/usr/share/icons/hicolor/scalable/apps/lyra-launcher.svg"
         self.assertIn(f"button-icon={menu_icon}", whisker)
+        self.assertIn("menu-width=620", whisker)
+        self.assertIn("menu-height=640", whisker)
+        self.assertIn("item-icon-size=2", whisker)
         icon_theme = (root / "usr/share/icons/Lyra-OS-Icons/index.theme").read_text(
             encoding="utf-8"
         )

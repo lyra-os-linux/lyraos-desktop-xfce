@@ -1,15 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <title>Lyra OS</title>
+  <title>Menu Lyra OS</title>
   <defs>
-    <linearGradient id="lyra" x1="12" y1="8" x2="50" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#22d3ee"/>
-      <stop offset=".52" stop-color="#3b82f6"/>
-      <stop offset="1" stop-color="#8b5cf6"/>
+    <linearGradient id="tile" x1="8" y1="5" x2="57" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172554"/>
+      <stop offset=".55" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#581c87"/>
     </linearGradient>
+    <linearGradient id="mark" x1="18" y1="14" x2="48" y2="51" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67e8f9"/>
+      <stop offset=".48" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#c4b5fd"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
-  <path d="M21 8v31c0 9 6 15 15 15 8 0 14-5 16-12-4 3-8 5-13 5-7 0-11-4-11-11V8Z" fill="url(#lyra)"/>
-  <path d="M30 36c5-2 9-7 12-14M33 40c7-2 12-7 16-14" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>
-  <circle cx="43" cy="18" r="2" fill="#67e8f9"/>
-  <circle cx="49" cy="21" r="1.5" fill="#a78bfa"/>
+  <rect x="4" y="4" width="56" height="56" rx="17" fill="url(#tile)"/>
+  <rect x="4.75" y="4.75" width="54.5" height="54.5" rx="16.25" fill="none" stroke="#a5b4fc" stroke-opacity=".28" stroke-width="1.5"/>
+  <path d="M20 14v23.5C20 46 25.5 51 34 51c7.1 0 12.4-3.9 15-10.5-4 2.7-7.7 4-11.3 4-6.4 0-10.2-3.2-10.2-9.2V14Z" fill="url(#mark)" filter="url(#glow)"/>
+  <path d="M29 36c5.7-2.4 10-7 13.2-14.2M31.8 40.2c6.8-2 11.8-6.5 15.2-13.5" fill="none" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+  <circle cx="42.4" cy="18.5" r="2.1" fill="#67e8f9"/>
+  <circle cx="48.2" cy="22.7" r="1.55" fill="#c4b5fd"/>
+  <circle cx="45.8" cy="30" r="1.15" fill="#fff" opacity=".9"/>
 </svg>

@@ -72,8 +72,10 @@ iso_consumer = true
 packages = [
   "beam",
   "lyra-fish-productivity",
+  "lyra-icons",
   "lyra-installer",
   "lyra-upgrade",
+  "lyra-wallpapers",
   "linuxtoys",
   "lyra-welcome",
   "lyra-theme",

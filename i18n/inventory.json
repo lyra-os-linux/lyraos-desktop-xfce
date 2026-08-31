@@ -53,6 +53,17 @@
       "rationale": "Setup and diagnostic messages ship as en-US, pt-BR and es-ES branches in __lyra_fish_msg, selected from LC_ALL/LC_MESSAGES/LANG by __lyra_fish_locale."
     },
     {
+      "id": "lyra-icons",
+      "project": "lyra",
+      "wave": "alpha4",
+      "status": "not-applicable",
+      "format": "none",
+      "domain": "none",
+      "selection": "none",
+      "lint": "inventory rationale",
+      "rationale": "Icon artwork package has no interactive Lyra-owned text."
+    },
+    {
       "id": "lyra-installer",
       "project": "lyra",
       "wave": "alpha4",
@@ -84,6 +95,17 @@
       "selection": "navigator language with en-US fallback",
       "lint": "cargo test --offline --workspace and UI catalog contract checks",
       "rationale": "Embedded en-US, pt-BR and es-ES catalogs cover the updater, progress and technical console."
+    },
+    {
+      "id": "lyra-wallpapers",
+      "project": "lyra",
+      "wave": "alpha4",
+      "status": "not-applicable",
+      "format": "none",
+      "domain": "none",
+      "selection": "none",
+      "lint": "inventory rationale",
+      "rationale": "Wallpaper artwork package has no interactive Lyra-owned text."
     },
     {
       "id": "lyra-welcome",

@@ -24,7 +24,15 @@ class I18nInventoryTests(unittest.TestCase):
         alpha4 = {entry["id"]: entry for entry in document["packages"] if entry["wave"] == "alpha4"}
         self.assertEqual(
             set(alpha4),
-            {"lyra-installer", "lyra-theme", "vega-gtk", "fina", "sheliak"},
+            {
+                "lyra-icons",
+                "lyra-installer",
+                "lyra-theme",
+                "lyra-wallpapers",
+                "vega-gtk",
+                "fina",
+                "sheliak",
+            },
         )
         self.assertEqual(alpha4["fina"]["status"], "complete")
 

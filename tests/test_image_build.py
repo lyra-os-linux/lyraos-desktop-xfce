@@ -544,6 +544,11 @@ class ImagePolicyTests(unittest.TestCase):
         self.assertNotIn("-cdrom", branch)
         self.assertNotIn('rm -f "$DISK_IMG"', branch)
         self.assertIn("preserving VM disk and UEFI state", branch)
+        self.assertIn('VM_MONITOR_SOCKET="$VM_DIR/qemu-monitor.sock"', helper)
+        self.assertEqual(
+            helper.count('-monitor "unix:$VM_MONITOR_SOCKET,server=on,wait=off"'),
+            2,
+        )
 
     def test_vm_helper_rejects_a_stale_published_installer(self) -> None:
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")

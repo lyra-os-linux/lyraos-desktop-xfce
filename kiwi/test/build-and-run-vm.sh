@@ -134,6 +134,7 @@ DISK_SIZE="${LYRA_VM_DISK_SIZE:-24G}"
 OVMF_VARS_STANDARD="$VM_DIR/ovmf-vars.bin"
 OVMF_VARS_SECURE="$VM_DIR/ovmf-secure-vars.bin"
 VM_PID_FILE="$VM_DIR/qemu.pid"
+VM_MONITOR_SOCKET="$VM_DIR/qemu-monitor.sock"
 LOG="$WORK_DIR/lyra-os-test.log"
 
 if [ "$BOOT_INSTALLED" -eq 1 ] &&
@@ -308,11 +309,12 @@ if [ "$BOOT_INSTALLED" -eq 1 ]; then
 
   mkdir -p "$VM_DIR"
   stop_previous_vm
-  rm -f "$VM_PID_FILE"
+  rm -f "$VM_PID_FILE" "$VM_MONITOR_SOCKET"
 
   INSTALLED_QEMU_ARGS=(
     -name lyra-os-test
     -pidfile "$VM_PID_FILE"
+    -monitor "unix:$VM_MONITOR_SOCKET,server=on,wait=off"
     -machine "$MACHINE"
     -cpu host
     -smp "$SMP"
@@ -915,7 +917,7 @@ fi
 mkdir -p "$VM_DIR"
 stop_previous_vm
 echo "--- deleting previous VM disk and UEFI state ---"
-rm -f "$DISK_IMG" "$OVMF_VARS_STANDARD" "$OVMF_VARS_SECURE" "$VM_PID_FILE"
+rm -f "$DISK_IMG" "$OVMF_VARS_STANDARD" "$OVMF_VARS_SECURE" "$VM_PID_FILE" "$VM_MONITOR_SOCKET"
 
 echo "--- creating install-target disk: $DISK_IMG ($DISK_SIZE) ---"
 qemu-img create -f qcow2 "$DISK_IMG" "$DISK_SIZE"
@@ -934,6 +936,7 @@ fi
 QEMU_ARGS=(
   -name lyra-os-test
   -pidfile "$VM_PID_FILE"
+  -monitor "unix:$VM_MONITOR_SOCKET,server=on,wait=off"
   -machine "$MACHINE"
   -cpu host
   -smp "$SMP"

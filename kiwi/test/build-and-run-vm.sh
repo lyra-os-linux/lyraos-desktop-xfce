@@ -53,6 +53,7 @@ RAM_MB="${LYRA_VM_RAM_MB:-8192}"
 SMP="${LYRA_VM_CPUS:-4}"
 RELEASE_TOOL="$REPO_ROOT/scripts/release.py"
 ISO_SECURITY_AUDIT="$REPO_ROOT/scripts/audit-release-iso.py"
+REHEARSAL_TRACE_TOOL="$SCRIPT_DIR/rehearsal-trace.py"
 
 SKIP_BUILD=0
 BUILD_ONLY=0
@@ -136,6 +137,7 @@ OVMF_VARS_SECURE="$VM_DIR/ovmf-secure-vars.bin"
 VM_PID_FILE="$VM_DIR/qemu.pid"
 VM_MONITOR_SOCKET="$VM_DIR/qemu-monitor.sock"
 VM_ID_FILE="$VM_DIR/installation.uuid"
+VM_TRACE_FILE="$VM_DIR/upgrade-rehearsal-trace.json"
 LOG="$WORK_DIR/lyra-os-test.log"
 
 load_vm_uuid() {
@@ -296,6 +298,10 @@ if [ "$BOOT_INSTALLED" -eq 1 ]; then
     echo "required command not found: qemu-system-x86_64" >&2
     exit 1
   fi
+  if ! command -v python3 >/dev/null 2>&1 || [ ! -r "$REHEARSAL_TRACE_TOOL" ]; then
+    echo "upgrade rehearsal trace tool is unavailable" >&2
+    exit 1
+  fi
   if [ ! -r "$OVMF_CODE" ]; then
     echo "OVMF firmware code is missing or unreadable: $OVMF_CODE" >&2
     exit 1
@@ -348,6 +354,8 @@ if [ "$BOOT_INSTALLED" -eq 1 ]; then
     INSTALLED_QEMU_ARGS+=(-global driver=cfi.pflash01,property=secure,value=on)
   fi
 
+  python3 "$REHEARSAL_TRACE_TOOL" --trace "$VM_TRACE_FILE" --uuid "$VM_UUID" \
+    --mode installed --disk "$DISK_IMG" --nvram "$OVMF_VARS"
   echo "--- booting installed disk without attaching an ISO ---"
   echo "--- preserving VM disk and UEFI state ---"
   echo "--- launching: qemu-system-x86_64 ${INSTALLED_QEMU_ARGS[*]} ---"
@@ -933,7 +941,7 @@ fi
 mkdir -p "$VM_DIR"
 stop_previous_vm
 echo "--- deleting previous VM disk and UEFI state ---"
-rm -f "$DISK_IMG" "$OVMF_VARS_STANDARD" "$OVMF_VARS_SECURE" "$VM_PID_FILE" "$VM_MONITOR_SOCKET" "$VM_ID_FILE"
+rm -f "$DISK_IMG" "$OVMF_VARS_STANDARD" "$OVMF_VARS_SECURE" "$VM_PID_FILE" "$VM_MONITOR_SOCKET" "$VM_ID_FILE" "$VM_TRACE_FILE"
 
 VM_ID_TMP="$VM_ID_FILE.tmp.$$"
 (umask 077; tr -d '\n' < /proc/sys/kernel/random/uuid > "$VM_ID_TMP")
@@ -977,6 +985,8 @@ if [ "$SECURE_BOOT" -eq 1 ]; then
 fi
 
 echo "--- booting live ISO once; subsequent reboot uses the installed disk ---"
+python3 "$REHEARSAL_TRACE_TOOL" --trace "$VM_TRACE_FILE" --uuid "$VM_UUID" \
+  --mode live --disk "$DISK_IMG" --nvram "$OVMF_VARS"
 QEMU_ARGS+=(-cdrom "$ISO_PATH")
 QEMU_ARGS+=(-boot order=c,once=d,menu=on)
 

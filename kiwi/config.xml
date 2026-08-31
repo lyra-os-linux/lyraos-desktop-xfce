@@ -490,6 +490,7 @@
          O serviço privilegiado reaproveita zypper, Snapper, dracut e GRUB;
          a interface nunca recebe privilégios amplos. -->
     <package name="lyra-upgrade"/>
+    <package name="lyra-release"/>
 
     <!--
       Branding (Lyra-Theme, github.com/lyra-os-linux/lyraos-desktop-theme). Package

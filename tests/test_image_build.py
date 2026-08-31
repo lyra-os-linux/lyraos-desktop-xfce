@@ -549,6 +549,10 @@ class ImagePolicyTests(unittest.TestCase):
             helper.count('-monitor "unix:$VM_MONITOR_SOCKET,server=on,wait=off"'),
             2,
         )
+        self.assertIn('VM_ID_FILE="$VM_DIR/installation.uuid"', helper)
+        self.assertEqual(helper.count('-uuid "$VM_UUID"'), 2)
+        self.assertIn("load_vm_uuid", branch)
+        self.assertNotIn('rm -f "$VM_ID_FILE"', branch)
 
     def test_vm_helper_rejects_a_stale_published_installer(self) -> None:
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")

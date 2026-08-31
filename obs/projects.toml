@@ -109,7 +109,7 @@ id = "vega"
 release = "home:rodrigosbrito:vega"
 staging = "home:rodrigosbrito:vega:staging"
 iso_consumer = true
-packages = ["vega-cli", "vega-gtk", "vega-web", "vegad"]
+packages = ["vega-cli", "vega-gtk", "vega-qt", "vega-web", "vega-xfce", "vegad"]
 
 [[projects.targets]]
 name = "openSUSE_Leap_16.0"

@@ -208,6 +208,18 @@
       "rationale": "GTK catalog implementation exists for all three locales."
     },
     {
+      "id": "vega-qt",
+      "project": "vega",
+      "display_name": "Vega Qt",
+      "wave": "alpha4",
+      "status": "complete",
+      "format": "qt-translations",
+      "domain": "vega-qt",
+      "selection": "LC_ALL/LC_MESSAGES/LANG and AccountsService",
+      "lint": "package translation tests",
+      "rationale": "Qt frontend ships the supported Vega locales and shares the backend locale contract."
+    },
+    {
       "id": "vega-web",
       "project": "vega",
       "wave": "alpha5",
@@ -217,6 +229,18 @@
       "selection": "authenticated user's locale",
       "lint": "cargo test --workspace",
       "rationale": "Locale support is shared by the Vega stack and already implemented."
+    },
+    {
+      "id": "vega-xfce",
+      "project": "vega",
+      "display_name": "Vega XFCE",
+      "wave": "alpha4",
+      "status": "complete",
+      "format": "gettext",
+      "domain": "vega-gtk",
+      "selection": "LC_ALL/LC_MESSAGES/LANG and AccountsService",
+      "lint": "cargo test --workspace --locked",
+      "rationale": "XFCE frontend ships en-US, pt-BR and es-ES gettext catalogs with English fallback."
     },
     {
       "id": "vegad",

@@ -30,6 +30,8 @@ class I18nInventoryTests(unittest.TestCase):
                 "lyra-theme",
                 "lyra-wallpapers",
                 "vega-gtk",
+                "vega-qt",
+                "vega-xfce",
                 "fina",
                 "sheliak",
             },

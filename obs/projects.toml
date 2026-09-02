@@ -91,13 +91,6 @@ packages = [
 legacy_packages = ["calco", "prosa"]
 
 [[projects.targets]]
-name = "openSUSE_Leap_16.0"
-upstream_project = "openSUSE:Leap:16.0"
-upstream_repository = "standard"
-architectures = ["x86_64"]
-iso_consumer = false
-
-[[projects.targets]]
 name = "openSUSE_Leap_16.1"
 upstream_project = "openSUSE:Leap:16.1"
 upstream_repository = "standard"
@@ -112,13 +105,6 @@ iso_consumer = true
 packages = ["vega-cli", "vega-gtk", "vega-qt", "vega-web", "vega-xfce", "vegad"]
 
 [[projects.targets]]
-name = "openSUSE_Leap_16.0"
-upstream_project = "openSUSE:Leap:16.0"
-upstream_repository = "standard"
-architectures = ["x86_64"]
-iso_consumer = false
-
-[[projects.targets]]
 name = "openSUSE_Leap_16.1"
 upstream_project = "openSUSE:Leap:16.1"
 upstream_repository = "standard"
@@ -131,13 +117,6 @@ release = "home:rodrigosbrito:fina"
 staging = "home:rodrigosbrito:fina:staging"
 iso_consumer = true
 packages = ["fina"]
-
-[[projects.targets]]
-name = "openSUSE_Leap_16.0"
-upstream_project = "openSUSE:Leap:16.0"
-upstream_repository = "standard"
-architectures = ["x86_64"]
-iso_consumer = false
 
 [[projects.targets]]
 name = "openSUSE_Leap_16.1"

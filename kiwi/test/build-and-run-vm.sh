@@ -174,8 +174,8 @@ if [ "$SUMMARIZE_UPGRADE" -eq 1 ]; then
   fi
   python3 "$OBSERVER" --trace "$VM_TRACE_FILE" \
     --observations "$VM_GUEST_EVIDENCE_FILE" --output "$VM_REHEARSAL_SUMMARY_FILE" \
-    --baseline-version 1.0 --baseline-build-id lyra-release-1.0 \
-    --target-version 1.1-beta.1 --target-build-id lyra-release-1.1-beta.1
+    --baseline-version 1.1 --baseline-build-id lyra-release-1.1 \
+    --target-version 1.2-beta.1 --target-build-id lyra-release-1.2-beta.1
   exit 0
 fi
 

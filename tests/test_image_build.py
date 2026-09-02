@@ -579,8 +579,8 @@ class ImagePolicyTests(unittest.TestCase):
         self.assertIn("--summarize-upgrade", helper)
         self.assertIn("LYRA_REHEARSAL_OBSERVER", helper)
         self.assertIn("upgrade-rehearsal-observations.json", helper)
-        self.assertIn("--baseline-build-id lyra-release-1.0", helper)
-        self.assertIn("--target-build-id lyra-release-1.1-beta.1", helper)
+        self.assertIn("--baseline-build-id lyra-release-1.1", helper)
+        self.assertIn("--target-build-id lyra-release-1.2-beta.1", helper)
 
     def test_vm_helper_rejects_a_stale_published_installer(self) -> None:
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")

@@ -1,6 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+import_graphical_environment() {
+  local -a variables=()
+  local variable unit
+
+  for variable in DISPLAY XAUTHORITY; do
+    if [ -n "${!variable:-}" ]; then
+      variables+=("$variable")
+    fi
+  done
+
+  if [ "${#variables[@]}" -eq 0 ]; then
+    return 0
+  fi
+
+  systemctl --user import-environment "${variables[@]}"
+  dbus-update-activation-environment --systemd "${variables[@]}"
+
+  # LightDM starts the user manager before the X11 session variables exist.
+  # Recover only the graphical services that may have raced that import.
+  for unit in xfce4-notifyd.service xdg-desktop-portal-gtk.service; do
+    if ! systemctl --user is-active --quiet "$unit"; then
+      systemctl --user reset-failed "$unit" || true
+      systemctl --user start "$unit"
+    fi
+  done
+}
+
+import_graphical_environment
+
 state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/lyra-os"
 marker="$state_dir/xfce-defaults-applied"
 wallpaper="/usr/share/backgrounds/lyra/2702-dawn.png"

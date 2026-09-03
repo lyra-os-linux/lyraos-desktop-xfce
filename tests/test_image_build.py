@@ -178,6 +178,20 @@ class ImagePolicyTests(unittest.TestCase):
         first_login_text = first_login.read_text(encoding="utf-8")
         self.assertIn("2702-dawn.png", first_login_text)
         self.assertIn(menu_icon, first_login_text)
+        for graphical_environment_contract in (
+            "systemctl --user import-environment",
+            "dbus-update-activation-environment --systemd",
+            "DISPLAY XAUTHORITY",
+            "xfce4-notifyd.service xdg-desktop-portal-gtk.service",
+            'systemctl --user is-active --quiet "$unit"',
+            'systemctl --user reset-failed "$unit"',
+            'systemctl --user start "$unit"',
+        ):
+            self.assertIn(graphical_environment_contract, first_login_text)
+        self.assertLess(
+            first_login_text.index("\nimport_graphical_environment\n"),
+            first_login_text.index('if [ -e "$marker" ]'),
+        )
         config_sh = (ROOT / "kiwi/config.sh").read_text(encoding="utf-8")
         self.assertIn("/etc/skel/.config/xfce4", config_sh)
         self.assertIn("/home/liveuser/.config/xfce4", config_sh)

@@ -20,7 +20,10 @@ para produção nem para computadores com dados sem backup.
   contratos bloqueantes da release;
 - verificação mensal de checksums Btrfs com `btrfsmaintenance`; balance,
   defrag e trim periódicos permanecem desativados para evitar escrita e I/O
-  inesperados.
+  inesperados;
+- importação de `DISPLAY` e `XAUTHORITY` para systemd/DBus no login XFCE,
+  evitando a falha do serviço de notificações e do portal GTK quando o
+  gerenciador de usuário inicia antes da sessão X11.
 
 ## Qualificação obrigatória da nova base
 

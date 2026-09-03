@@ -23,7 +23,9 @@ para produção nem para computadores com dados sem backup.
   inesperados;
 - importação de `DISPLAY` e `XAUTHORITY` para systemd/DBus no login XFCE,
   evitando a falha do serviço de notificações e do portal GTK quando o
-  gerenciador de usuário inicia antes da sessão X11.
+  gerenciador de usuário inicia antes da sessão X11;
+- correção do caminho do wallpaper no greeter do LightDM, alinhado ao mesmo
+  fundo `2702-dawn.png` usado pela sessão XFCE.
 
 ## Qualificação obrigatória da nova base
 

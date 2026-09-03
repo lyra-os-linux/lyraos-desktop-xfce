@@ -151,7 +151,9 @@ class ImagePolicyTests(unittest.TestCase):
         launcher = (root / "etc/xdg/xfce4/panel/launcher-2/vega.desktop").read_text(
             encoding="utf-8"
         )
-        self.assertIn("lyra-dawn.png", lightdm)
+        self.assertIn(
+            "background=/usr/share/backgrounds/lyra/2702-dawn.png", lightdm
+        )
         self.assertIn("lyra-launcher.svg", lightdm)
         self.assertIn("hide-user-image=false", lightdm)
         self.assertIn("round-user-image=true", lightdm)

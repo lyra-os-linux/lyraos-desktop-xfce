@@ -32,12 +32,13 @@ class ManifestTests(unittest.TestCase):
 
     def test_project_inventory_matches_release_contract(self) -> None:
         self.assertEqual([project.id for project in self.manifest.projects], ["lyra", "vega", "fina"])
-        self.assertEqual(len(self.manifest.project("lyra").packages), 15)
+        self.assertEqual(len(self.manifest.project("lyra").packages), 16)
         self.assertNotIn("chord", self.manifest.project("lyra").packages)
         self.assertIn("linuxtoys", self.manifest.project("lyra").packages)
         self.assertIn("zed", self.manifest.project("lyra").packages)
         self.assertIn("vscode-repo", self.manifest.project("lyra").packages)
         self.assertIn("lyra-welcome", self.manifest.project("lyra").packages)
+        self.assertIn("lyra-release", self.manifest.project("lyra").packages)
         self.assertIn("nvm-fish", self.manifest.project("lyra").packages)
         self.assertIn("lyra-fish-productivity", self.manifest.project("lyra").packages)
         self.assertNotIn("calamares", self.manifest.project("lyra").packages)
@@ -52,6 +53,8 @@ class ManifestTests(unittest.TestCase):
                 project.targets[0].upstream_project, "openSUSE:Leap:16.1"
             )
         self.assertEqual(self.manifest.project("fina").targets[1].name, "openSUSE_Tumbleweed")
+        self.assertEqual(self.manifest.project("vega").targets[1].name, "openSUSE_Tumbleweed")
+        self.assertFalse(self.manifest.project("vega").targets[1].iso_consumer)
 
     def test_staging_is_never_an_iso_consumer(self) -> None:
         for project in self.manifest.projects:

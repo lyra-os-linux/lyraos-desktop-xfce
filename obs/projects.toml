@@ -74,6 +74,7 @@ packages = [
   "lyra-fish-productivity",
   "lyra-icons",
   "lyra-installer",
+  "lyra-release",
   "lyra-upgrade",
   "lyra-wallpapers",
   "linuxtoys",
@@ -110,6 +111,13 @@ upstream_project = "openSUSE:Leap:16.1"
 upstream_repository = "standard"
 architectures = ["x86_64"]
 iso_consumer = true
+
+[[projects.targets]]
+name = "openSUSE_Tumbleweed"
+upstream_project = "openSUSE:Factory"
+upstream_repository = "snapshot"
+architectures = ["x86_64"]
+iso_consumer = false
 
 [[projects]]
 id = "fina"

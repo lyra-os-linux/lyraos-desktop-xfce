@@ -75,6 +75,17 @@
       "rationale": "Three embedded catalogs with live switching and English fallback."
     },
     {
+      "id": "lyra-release",
+      "project": "lyra",
+      "wave": "alpha7",
+      "status": "not-applicable",
+      "format": "none",
+      "domain": "none",
+      "selection": "none",
+      "lint": "inventory rationale",
+      "rationale": "Release identity package contains system metadata and no interactive Lyra-owned text."
+    },
+    {
       "id": "lyra-theme",
       "project": "lyra",
       "wave": "alpha4",

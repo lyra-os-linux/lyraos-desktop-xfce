@@ -621,6 +621,19 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
     echo "!!! built image /etc/os-release does not match release.toml" >&2
     exit 1
   fi
+  EXPECTED_PRODUCT_VERSION="$("$RELEASE_TOOL" field product_version)"
+  IMAGE_PRODUCT_RELEASE="$BUILD_DIR/build/image-root/usr/lib/lyra-os/product-release"
+  IMAGE_LYRA_RELEASE_VERSION="$(
+    rpm --root "$BUILD_DIR/build/image-root" -q --qf '%{VERSION}' lyra-release 2>/dev/null || true
+  )"
+  if [ "$IMAGE_LYRA_RELEASE_VERSION" != "$EXPECTED_PRODUCT_VERSION" ] ||
+     ! grep -Fx "LYRA_VERSION_ID='$EXPECTED_PRODUCT_VERSION'" \
+       "$IMAGE_PRODUCT_RELEASE" >/dev/null ||
+     ! grep -Fx "LYRA_BUILD_ID='lyra-release-$EXPECTED_PRODUCT_VERSION'" \
+       "$IMAGE_PRODUCT_RELEASE" >/dev/null; then
+    echo "!!! built image lyra-release identity does not match release.toml" >&2
+    exit 1
+  fi
   if ! grep -Fx "LYRA_SOURCE_COMMIT=\"$BUILD_SOURCE_COMMIT\"" \
       "$BUILD_DIR/build/image-root/usr/lib/lyra-os/build-info" >/dev/null; then
     echo "!!! built image does not identify source commit $BUILD_SOURCE_COMMIT" >&2

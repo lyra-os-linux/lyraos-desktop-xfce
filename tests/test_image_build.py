@@ -614,6 +614,15 @@ class ImagePolicyTests(unittest.TestCase):
         self.assertIn(
             r'IMAGE_VERSION=\"$("$RELEASE_TOOL" field version_id)\"', helper
         )
+        self.assertIn("IMAGE_PRODUCT_RELEASE", helper)
+        self.assertIn("IMAGE_LYRA_RELEASE_VERSION", helper)
+        self.assertIn("LYRA_VERSION_ID='$EXPECTED_PRODUCT_VERSION'", helper)
+        self.assertIn(
+            "LYRA_BUILD_ID='lyra-release-$EXPECTED_PRODUCT_VERSION'", helper
+        )
+        self.assertIn(
+            "built image lyra-release identity does not match release.toml", helper
+        )
 
     def test_vm_helper_guards_host_loader_cache_during_kiwi_build(self) -> None:
         helper = (ROOT / "kiwi/test/build-and-run-vm.sh").read_text(encoding="utf-8")

@@ -83,6 +83,26 @@ ou a previsibilidade do sistema:
 Não trate toda mudança como perigosa por padrão. O alerta deve ser concreto,
 proporcional ao risco e fundamentado no comportamento técnico esperado.
 
+## Execução dos testes pelo agente
+
+O agente deve executar diretamente os testes e coletar suas evidências,
+inclusive dentro das VMs, para garantir consistência, rastreabilidade e
+qualidade. Não transfira ao mantenedor comandos que possam ser executados pelo
+agente. Solicite intervenção humana somente para avaliações visuais, hardware
+físico, credenciais ou outras etapas que não possam ser automatizadas com
+segurança, deixando explícito o resultado que precisa ser observado.
+
+## Lição aprendida: identidade publicada antes da ISO
+
+Antes de construir ou testar uma ISO, valide semanticamente todos os pacotes
+OBS que definem a identidade do produto. Existência, assinatura, dependências
+e estado `published` não bastam: a versão do RPM e o conteúdo instalado devem
+corresponder ao `release.toml`. Em especial, confira `lyra-release` e
+`/usr/lib/lyra-os/product-release`; não use apenas `/etc/os-release`, pois o
+overlay da imagem pode deixá-lo correto e mascarar um RPM antigo. Só inicie o
+fluxo completo de VM depois que essa verificação passar no canal consumido
+pela ISO.
+
 ## Significado dos estágios de release
 
 O Lyra não promove uma versão porque chegou a uma data. O lançamento pode ser

@@ -57,6 +57,19 @@ LYRA_SOURCE_EPOCH="$LYRA_BUILD_SOURCE_EPOCH"
 LYRA_IMAGE_BUILT_AT="$LYRA_IMAGE_BUILT_AT"
 EOF
 
+# KIWI validates packages from Packman while assembling the image, but its
+# build-time repository trust database is not part of the installed root.
+# Import the pinned repository key into the image RPM database so the first
+# non-interactive refresh can verify Packman metadata without asking the user
+# to make a trust decision. scripts/image-build.py validates this file's exact
+# fingerprint before a source export or image build is allowed.
+PACKMAN_SIGNING_KEY=/etc/pki/rpm-gpg/RPM-GPG-KEY-packman-essentials
+if [ ! -r "$PACKMAN_SIGNING_KEY" ]; then
+    echo "Missing versioned Packman signing key: $PACKMAN_SIGNING_KEY" >&2
+    exit 1
+fi
+rpmkeys --import "$PACKMAN_SIGNING_KEY"
+
 # Leap's filesystem package does not own /etc/mtab, and a KIWI-built root can
 # therefore leave the path absent.  Snapper still opens /etc/mtab while
 # detecting the filesystem for `create-config`; point it at the kernel's live

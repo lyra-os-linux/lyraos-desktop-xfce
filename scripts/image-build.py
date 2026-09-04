@@ -37,6 +37,12 @@ PACKAGE_SIGNING_FINGERPRINTS = {
     "85E26470357A6391DBA1BC9E0739B8027BF939EF",
     "399218A6E088C4053F4533BE58097F767EDCA82E",
 }
+PACKMAN_SIGNING_KEY = (
+    KIWI / "root/etc/pki/rpm-gpg/RPM-GPG-KEY-packman-essentials"
+)
+PACKMAN_SIGNING_FINGERPRINTS = {
+    "F8875B880D518B6B8C530D1345A1D0671ABD1AFB",
+}
 INSTALLER_APP_ID = "org.lyraos.LyraInstaller"
 INSTALLER_EXEC = "/usr/bin/lyra-install-lock /usr/bin/lyra-installer"
 INSTALLER_TRY_EXEC = "/usr/bin/lyra-installer"
@@ -300,6 +306,34 @@ def validate_sources(manifest: Manifest, *, release_file: Path | None = None) ->
     }
     if fingerprints != PACKAGE_SIGNING_FINGERPRINTS:
         raise PolicyError("RPM package signing keyring fingerprints differ from policy")
+    if not PACKMAN_SIGNING_KEY.is_file():
+        raise PolicyError("versioned Packman repository signing key is missing")
+    with tempfile.TemporaryDirectory(prefix="lyra-packman-keyring-") as gpg_home:
+        key_result = subprocess.run(
+            [
+                gpg,
+                "--batch",
+                "--homedir",
+                gpg_home,
+                "--with-colons",
+                "--import-options",
+                "show-only",
+                "--import",
+                str(PACKMAN_SIGNING_KEY),
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+    if key_result.returncode:
+        raise PolicyError("versioned Packman repository signing key is invalid")
+    fingerprints = {
+        fields[9].upper()
+        for line in key_result.stdout.splitlines()
+        if (fields := line.split(":"))[0] == "fpr" and len(fields) > 9
+    }
+    if fingerprints != PACKMAN_SIGNING_FINGERPRINTS:
+        raise PolicyError("Packman repository signing key fingerprint differs from policy")
     for relative in (
         "root/usr/bin/lyra-hardware-matrix",
         "root/usr/bin/lyra-live-smoke",
@@ -361,6 +395,8 @@ def validate_sources(manifest: Manifest, *, release_file: Path | None = None) ->
     for token in forbidden:
         if token in config:
             raise PolicyError(f"network-dependent build command is forbidden: {token.strip()}")
+    if 'rpmkeys --import "$PACKMAN_SIGNING_KEY"' not in config:
+        raise PolicyError("KIWI must import the versioned Packman signing key")
     flathub = KIWI / "root/etc/flatpak/remotes.d/flathub.flatpakrepo"
     if "GPGKey=" not in flathub.read_text(encoding="utf-8"):
         raise PolicyError("versioned Flathub remote or signing key is missing")

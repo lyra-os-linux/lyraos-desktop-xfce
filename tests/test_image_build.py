@@ -95,6 +95,31 @@ class ImagePolicyTests(unittest.TestCase):
         self.assertIn("download.max_concurrent_connections = 5", config)
         self.assertIn("download.use_deltarpm = false", config)
 
+    def test_packman_repository_key_is_pinned_and_imported(self) -> None:
+        key = image_build.PACKMAN_SIGNING_KEY
+        self.assertTrue(key.is_file())
+        result = subprocess.run(
+            [
+                "gpg",
+                "--batch",
+                "--with-colons",
+                "--show-keys",
+                str(key),
+            ],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        fingerprints = {
+            fields[9].upper()
+            for line in result.stdout.splitlines()
+            if (fields := line.split(":"))[0] == "fpr" and len(fields) > 9
+        }
+        self.assertEqual(fingerprints, image_build.PACKMAN_SIGNING_FINGERPRINTS)
+
+        config_sh = (ROOT / "kiwi/config.sh").read_text(encoding="utf-8")
+        self.assertIn('rpmkeys --import "$PACKMAN_SIGNING_KEY"', config_sh)
+
     def test_localsearch_failure_is_contained(self) -> None:
         preflight = ROOT / "kiwi/root/usr/libexec/lyra-localsearch-preflight"
         self.assertTrue(preflight.stat().st_mode & stat.S_IXUSR)

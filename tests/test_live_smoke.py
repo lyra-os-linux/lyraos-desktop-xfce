@@ -80,6 +80,32 @@ class LiveSmokeTests(unittest.TestCase):
             self.assertEqual(report["status"], "passed")
             self.assertEqual(report["observations"]["network_connectivity"], "none")
 
+    def test_desktop_checks_the_canonical_display_manager_unit(self) -> None:
+        calls: list[list[str]] = []
+
+        def canonical_runner(arguments: list[str]) -> tuple[int, str]:
+            calls.append(arguments)
+            if arguments[:2] == ["systemctl", "is-active"]:
+                unit = arguments[2]
+                if unit == "lightdm.service":
+                    return 3, "inactive"
+            return self.runner(arguments)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.create_root(root)
+            report = live_smoke.validate_live_session(
+                root=root,
+                username="liveuser",
+                runner=canonical_runner,
+            )
+
+        self.assertEqual(report["status"], "passed")
+        self.assertIn(
+            ["systemctl", "is-active", "display-manager.service"], calls
+        )
+        self.assertNotIn(["systemctl", "is-active", "lightdm.service"], calls)
+
     def test_failed_unit_and_unreviewed_journal_block_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -153,7 +153,7 @@ def validate_live_session(
             )
         expected_units = (
             "graphical.target",
-            "lightdm.service",
+            "display-manager.service",
             "NetworkManager.service",
         )
 

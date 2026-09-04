@@ -1869,7 +1869,11 @@ mod tests {
 
         let error = op.perform(&executor).unwrap_err();
 
-        assert!(error.to_string().contains("home já existe antes de useradd"));
+        assert!(
+            error
+                .to_string()
+                .contains("home já existe antes de useradd")
+        );
         assert!(executor.calls().is_empty());
     }
 

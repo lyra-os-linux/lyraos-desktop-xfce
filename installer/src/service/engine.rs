@@ -4,7 +4,7 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::storage::{PlanBuilder, StorageSnapshot, INSTALL_PLAN_SCHEMA_VERSION};
+use crate::storage::{INSTALL_PLAN_SCHEMA_VERSION, PlanBuilder, StorageSnapshot};
 
 use super::executor::Executor;
 use super::operation::PrivilegedOperation;
@@ -148,10 +148,10 @@ mod tests {
     use std::sync::Mutex;
 
     use super::*;
+    use crate::InstallConfig;
     use crate::service::executor::ExecutorError;
     use crate::service::operation::{ArgvCommand, OperationError};
     use crate::storage::{DeviceRole, Disk, GuidedChoice, RawTarget, Transport, VolumeLayer};
-    use crate::InstallConfig;
 
     struct FakeOperation {
         name: &'static str,

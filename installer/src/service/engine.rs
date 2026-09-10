@@ -310,6 +310,62 @@ mod tests {
     }
 
     #[test]
+    fn account_protocol_errors_fail_before_destructive_operations_without_echoing_input() {
+        for (name, password, expected) in [
+            (
+                "Lyra User",
+                "valid-pass\nroot:other-pass",
+                "validation.invalidPassword",
+            ),
+            (
+                "Lyra User",
+                "valid-pass\0suffix",
+                "validation.invalidPassword",
+            ),
+            (
+                "Name:extra-field",
+                "valid-password",
+                "validation.invalidFullName",
+            ),
+            (
+                "Name\nextra-record",
+                "valid-password",
+                "validation.invalidFullName",
+            ),
+            (
+                "Name\0truncated",
+                "valid-password",
+                "validation.invalidFullName",
+            ),
+        ] {
+            let (snapshot, mut request) = valid_request();
+            request.config.full_name = name.into();
+            request.config.password = password.into();
+            let executor = FakeExecutor::new(None);
+            let mut events = Vec::new();
+            let outcome = execute(
+                &request,
+                &snapshot,
+                &fake_ops(&[("wipe disk", false)]),
+                &executor,
+                &AtomicBool::new(false),
+                |event| events.push(event),
+            );
+            assert_eq!(outcome, ExecutionOutcome::Failed);
+            assert!(executor.calls().is_empty());
+            assert!(
+                matches!(events.last(), Some(ExecutionEvent::Failed { step, message })
+                if step == "validação da configuração" && message == expected)
+            );
+            let output = serde_json::to_string(&events).unwrap();
+            assert!(!output.contains("valid-pass"));
+            assert!(!output.contains("other-pass"));
+            assert!(!output.contains("extra-field"));
+            assert!(!output.contains("truncated"));
+        }
+    }
+
+    #[test]
     fn a_plan_that_no_longer_matches_the_current_disk_state_fails_before_any_operation() {
         let (_, request) = valid_request();
         let stale_snapshot = StorageSnapshot {

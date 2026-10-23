@@ -1,11 +1,11 @@
 # Lyra OS — edição XFCE
 
 > [!IMPORTANT]
-> A edição XFCE está em segundo plano: **não tem compromisso de lançamento
-> na 16.1**, cujo único alvo é a edição
-> [GNOME](https://github.com/lyra-os-linux/lyraos-desktop). Este repositório
-> preserva imagem, integração e gates próprios para o XFCE, mas retomá-lo
-> exige planejamento próprio.
+> A edição XFCE foi retomada e será lançada **quando estiver pronta, sem
+> data definida**: só é promovida depois de passar por Alpha, Beta e RC com
+> os mesmos gates da edição GNOME. O lançamento do
+> [GNOME](https://github.com/lyra-os-linux/lyraos-desktop) 16.1 segue seu
+> próprio cronograma e não espera por esta edição.
 
 Lyra OS é uma distribuição Linux desktop baseada no openSUSE Leap 16.1,
 voltada a uma experiência XFCE leve, estável e integrada ao ecossistema
@@ -13,10 +13,10 @@ Lyra. Este repositório contém a descrição KIWI usada para gerar a ISO live e
 o instalador da edição **Odisseia 16.1 Alpha 7** para computadores x86_64.
 
 O projeto mantém também as edições
-[GNOME](https://github.com/lyra-os-linux/lyraos-desktop), a principal, e
-[KDE Plasma](https://github.com/lyra-os-linux/lyraos-desktop-kde), também em segundo plano. O
-desenvolvimento desta edição parou na Alpha 7; o histórico de acompanhamento
-está na [issue #1](https://github.com/lyra-os-linux/lyraos-desktop-xfce/issues/1).
+[GNOME](https://github.com/lyra-os-linux/lyraos-desktop) e
+[KDE Plasma](https://github.com/lyra-os-linux/lyraos-desktop-kde). O desenvolvimento desta edição
+recomeça a partir da Alpha 7; o acompanhamento do XFCE está na
+[issue #1](https://github.com/lyra-os-linux/lyraos-desktop-xfce/issues/1).
 
 ## ECA Digital
 
@@ -75,10 +75,11 @@ decisões de implementação, limitações e verificações já realizadas.
 
 ## Ciclo atual e próximos ciclos
 
-Por decisão do mantenedor, a versão 16.1 tem o GNOME como único alvo de
-lançamento. A estabilização conjunta das três edições, prevista até 28 de
-setembro de 2026, foi suspensa, e o XFCE não terá paridade nesta versão. O
-Lyra Installer continua planejado em `en-US`, `pt-BR` e `es-ES`, com inglês
+O GNOME 16.1 é lançado de forma independente. A estabilização conjunta das
+três edições, que estava prevista até 28 de setembro de 2026, foi substituída
+por ciclos próprios: o XFCE retoma o desenvolvimento a partir da Alpha 7 e
+será lançado quando cumprir todos os gates, sem data fixa. O Lyra Installer
+continua planejado em `en-US`, `pt-BR` e `es-ES`, com inglês
 como padrão e fallback. Os demais pacotes próprios continuam com o gate
 integral em `en-US`/`pt-BR`; sua ampliação fica para uma release futura. O
 cronograma e os gates estão registrados no [roadmap do projeto](docs/roadmap.md).

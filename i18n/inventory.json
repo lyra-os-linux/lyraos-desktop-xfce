@@ -223,12 +223,12 @@
       "project": "vega",
       "display_name": "Vega Qt",
       "wave": "alpha4",
-      "status": "scheduled",
+      "status": "complete",
       "format": "Qt Linguist",
       "domain": "vega-qt",
       "selection": "QLocale with English fallback",
-      "lint": "Qt translation catalog validation",
-      "rationale": "Shared vega OBS package, not selected by the XFCE recipe. The Qt frontend still hard-codes Portuguese strings and ships no translation catalogs."
+      "lint": "scripts/check-translations.sh",
+      "rationale": "Shared vega OBS package, not selected by the XFCE recipe. Vega Qt 0.1.7 ships English source strings with pt-BR and es-ES catalogs (lyra-os-linux/vega-qt#7)."
     },
     {
       "id": "vega-web",
